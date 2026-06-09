@@ -4,26 +4,25 @@ exports.handler = async (event) => {
   }
 
   const { topic, date } = JSON.parse(event.body);
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: `Write a professional SEO-optimized crypto article about "${topic}" for ${date}. Start with "HEADLINE: " then write ~400 words with sections: Introduction, What's Happening, Key Takeaways (bullets), What This Means for Investors.`
-      }]
-    })
-  });
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `Write a professional SEO-optimized crypto article about "${topic}" for ${date}. Start with "HEADLINE: " then write ~400 words with sections: Introduction, What's Happening, Key Takeaways (bullets), What This Means for Investors.`
+          }]
+        }]
+      })
+    }
+  );
 
   const data = await response.json();
-  const text = data.content[0].text;
+  const text = data.candidates[0].content.parts[0].text;
 
   return {
     statusCode: 200,
